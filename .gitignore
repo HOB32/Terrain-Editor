@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+# projects and caches live under the data root, never here
+cache/
+projects/

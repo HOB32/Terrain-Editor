@@ -1,0 +1,27 @@
+/* The Dev Hub's colours and common controls, so the Terrain tool looks like the
+   rest of the hub's tools. The page's own styles are in index.html. */
+:root{
+  --t-bg:#0c0e11;--t-surface:#131619;--t-surface-2:#1a1e23;--t-surface-3:#22272e;--t-surface-4:#2b313a;
+  --t-line:#23282f;--t-line-2:#2f353e;--t-text:#e9ecf0;--t-text-2:#a3abb7;--t-text-3:#6c7482;
+  --t-accent:#f5a524;--t-accent-hi:#ffb84a;--t-accent-fg:#1c1204;--t-accent-soft:rgba(245,165,36,.13);--t-accent-line:rgba(245,165,36,.45);
+  --t-ok:#3fcf8e;--t-bad:#f25f5c;--t-r:8px;--t-r-lg:12px;
+  --t-font:"Segoe UI Variable Text","Segoe UI Variable","Segoe UI",system-ui,sans-serif;
+  /* the pages' own variable names */
+  --bg:var(--t-bg);--panel:var(--t-surface);--line:var(--t-line-2);--text:var(--t-text);--dim:var(--t-text-2);--muted:var(--t-text-2);
+  --accent:var(--t-accent);--green:var(--t-ok);--bg2:var(--t-surface);--bg3:var(--t-surface-2);--fg:var(--t-text);--acc:var(--t-accent);
+  --border:var(--t-line-2);--sel:rgba(245,165,36,.16);--mod:#f0c04a;--new:var(--t-ok);--del:var(--t-bad);
+  color-scheme:dark;
+}
+html,body{background:var(--t-bg)!important;color:var(--t-text);font-family:var(--t-font)!important;-webkit-font-smoothing:antialiased}
+*{scrollbar-width:thin;scrollbar-color:var(--t-surface-4) transparent}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--t-surface-4);border:3px solid transparent;background-clip:padding-box;border-radius:8px}
+:focus-visible{outline:2px solid var(--t-accent)!important;outline-offset:2px}
+button,input,select,textarea{font-family:var(--t-font)!important;color:var(--t-text);background-color:var(--t-surface-2);border:1px solid var(--t-line-2);border-radius:var(--t-r);transition:background .12s,border-color .12s}
+button{cursor:pointer;font-weight:500}
+button:hover:not(:disabled){background-color:var(--t-surface-3);border-color:var(--t-surface-4)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--t-accent);box-shadow:0 0 0 3px var(--t-accent-soft)}
+button.primary,.primary{background:var(--t-accent)!important;border-color:var(--t-accent)!important;color:var(--t-accent-fg)!important;font-weight:600}
+button.primary:hover:not(:disabled),.primary:hover:not(:disabled){background:var(--t-accent-hi)!important;border-color:var(--t-accent-hi)!important}
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--t-accent)}
+select option{background:var(--t-surface-2)}

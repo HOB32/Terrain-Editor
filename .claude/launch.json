@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "terrain-tool",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["terrain_server.py", "--no-browser", "--port", "8766"],
+      "port": 8766
+    }
+  ]
+}

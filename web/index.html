@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>H1Z1 Terrain Tool</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html,body{height:100%;margin:0;background:#0c0e11;color:#e9ecf0;font:13px/1.5 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}
+button,select,input{font:inherit;color:inherit;background:#1a1e23;border:1px solid #2f353e;border-radius:8px;min-height:32px;padding:0 10px}
+button{cursor:pointer;font-weight:500}button:hover{background:#22272e}button:disabled{opacity:.45;cursor:default}
+.app{display:grid;grid-template-columns:310px minmax(0,1fr);height:100%}
+.side{background:#131619;border-right:1px solid #23282f;padding:14px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+.head{display:flex;align-items:center;gap:8px}.head b{font-size:15px}
+.beta{font-size:10px;font-weight:700;letter-spacing:.06em;color:#1c1204;background:#f5a524;border-radius:999px;padding:1px 7px}
+.field{display:grid;grid-template-columns:78px 1fr;align-items:center;gap:8px;color:#a3abb7;font-size:12px}
+#map{width:100%;aspect-ratio:1;border-radius:10px;background:#0a0b0d;border:1px solid #23282f;cursor:crosshair;display:block}
+.legend{font-size:11px;color:#6c7482;line-height:1.5}
+.row{display:flex;gap:6px}.row button{flex:1}
+.chk{display:flex;align-items:center;gap:8px;color:#a3abb7;font-size:12px;cursor:pointer}.chk input{min-height:0;width:15px;height:15px;accent-color:#f5a524}
+.status{font-size:12px;color:#a3abb7;background:#1a1e23;border:1px solid #23282f;border-radius:8px;padding:8px 10px;min-height:36px}
+.status.err{color:#ffb4a8;background:rgba(242,95,92,.12);border-color:rgba(242,95,92,.35)}
+.note{font-size:11px;color:#6c7482;margin-top:auto;line-height:1.55}
+.group{border:1px solid #23282f;border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:8px}
+.group[open]{background:#15181c}.group summary{cursor:pointer;font-weight:600;color:#e9ecf0}
+.group input:not([type=checkbox]),.group select{width:100%}.group select[size]{height:auto;padding:4px}
+.view{position:relative;min-width:0;background:linear-gradient(#1b2530 0%,#0d1116 60%)}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none;outline:none}#gl.drag{cursor:grabbing}
+.hint{position:absolute;left:12px;bottom:12px;font-size:11px;color:#8a93a0;background:rgba(19,22,25,.78);border:1px solid #23282f;border-radius:999px;padding:4px 10px;pointer-events:none}
+.hint kbd{font:500 10px/1 inherit;background:#22272e;border:1px solid #2f353e;border-radius:4px;padding:1px 4px;margin:0 2px;color:#c9ced6}
+.info{position:absolute;right:12px;top:12px;font-size:11.5px;color:#a3abb7;background:rgba(19,22,25,.82);border:1px solid #23282f;border-radius:12px;padding:10px 12px;min-width:210px;pointer-events:none;backdrop-filter:blur(8px)}
+.info:empty{display:none}.info b{color:#e9ecf0}
+.pick{position:absolute;left:12px;top:12px;font-size:12px;color:#e9ecf0;background:rgba(19,22,25,.9);border:1px solid #2f353e;border-radius:12px;padding:10px 12px;max-width:340px;backdrop-filter:blur(8px)}
+.pick small{display:block;color:#8a93a0}.pick .row{margin-top:8px}
+.empty{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:#6c7482;gap:6px;pointer-events:none}
+.empty b{color:#a3abb7;font-size:15px}
+.seg{display:flex;gap:2px;padding:3px;background:#0c0e11;border:1px solid #23282f;border-radius:8px}.seg button{flex:1;min-height:26px;border:0;background:transparent;color:#a3abb7;font-size:12px;padding:0 4px}
+.seg button.on{background:#f5a524;color:#1c1204}button.primary{background:#f5a524;border-color:#f5a524;color:#1c1204;font-weight:600}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#gl.build{cursor:crosshair}
+.layers{display:flex;flex-direction:column;gap:2px}
+.layer{display:grid!important;grid-template-columns:15px 10px 1fr auto;gap:8px!important;padding:3px 0}
+.layer i,.pick i.sw{display:inline-block;width:10px;height:10px;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
+.pick i.sw{margin-right:6px;vertical-align:0}
+.layer small{color:#6c7482;font-size:11px}
+.tabs{display:flex;gap:2px;padding:3px;background:#0c0e11;border:1px solid #23282f;border-radius:10px}
+.tabs button{flex:1;border:0;background:transparent;color:#a3abb7;min-height:30px;font-weight:600}.tabs button.on{background:#22272e;color:#e9ecf0;box-shadow:inset 0 -2px 0 #f5a524}
+.tabpane{display:flex;flex-direction:column;gap:10px}
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.tools button{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:52px;padding:6px 2px;font-size:11.5px;border-radius:9px}
+.tools button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tools button.on{background:#f5a524;border-color:#f5a524;color:#1c1204}
+.tools button kbd{font:600 9px/1 inherit;opacity:.55}
+.slider{display:grid;grid-template-columns:62px 1fr 44px;align-items:center;gap:8px;color:#a3abb7;font-size:12px}
+.slider input{min-height:0;padding:0;accent-color:#f5a524}.slider output{text-align:right;color:#e9ecf0;font-variant-numeric:tabular-nums}
+.swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;max-height:236px;overflow:auto;padding-right:2px}
+.swatch{display:flex;flex-direction:column;justify-content:flex-end;height:54px;padding:3px 5px!important;border-radius:8px;background-size:cover;background-position:center;font-size:10.5px!important;text-align:left;text-shadow:0 1px 2px #000,0 0 4px #000;color:#fff!important;line-height:1.2;position:relative}
+.swatch.on{outline:2px solid #f5a524;outline-offset:1px}
+.quick{display:flex;flex-wrap:wrap;gap:4px}.quick button{min-height:26px;font-size:11.5px;padding:0 8px;border-radius:999px}.quick button.on{background:#f5a524;border-color:#f5a524;color:#1c1204}
+.opts{display:flex;flex-direction:column;gap:8px}
+.load{position:absolute;left:50%;top:14px;transform:translateX(-50%);font-size:12px;background:rgba(19,22,25,.9);border:1px solid #2f353e;border-radius:999px;padding:6px 14px;pointer-events:none}
+</style>
+<link rel="stylesheet" href="/ui-frame.css"><script>if(window.top!==window.self)document.documentElement.classList.add("embedded")</script></head>
+<body>
+<div class="app">
+ <aside class="side">
+  <div class="head"><b>Terrain</b><span class="beta">BETA</span></div>
+  <div class="tabs" role="tablist"><button id="tabExploreBtn" class="on" role="tab" aria-selected="true">Explore</button><button id="tabCreateBtn" role="tab" aria-selected="false">Create area</button><button id="tabSeasonBtn" role="tab" aria-selected="false" title="Snow, falling snow and Christmas lights for the KotK client's own Z2">Christmas</button></div>
+  <section id="tabExplore" class="tabpane">
+  <label class="field">Game<select id="game" title="Which game's files to read. Areas built into the game are made on the KotK depot, the client the local launcher runs."></select></label>
+  <label class="field">Zone<select id="zone"></select></label>
+  <canvas id="map" width="560" height="560" aria-label="Zone overview. Click to fly there; the terrain around the view loads by itself."></canvas>
+  <div class="legend"><b>Click</b> the map to fly there. The area around the view loads by itself; fly with <b>W A S D</b>.</div>
+  <label class="field">View range<select id="range"><option value="1">Near · 3×3 chunks</option><option value="2" selected>Medium · 5×5</option><option value="3">Far · 7×7</option></select></label>
+  <label class="field">Ground<select id="detail"><option value="low">Low detail · fastest</option><option value="medium" selected>Medium detail</option><option value="high">High detail</option></select></label>
+  <label class="field">Draw props<select id="propRange"><option value="250">to 250 m</option><option value="600" selected>to 600 m</option><option value="1500">to 1.5 km</option><option value="99999">everything loaded</option></select></label>
+  <details class="group" open><summary>Display</summary>
+   <label class="chk"><input type="checkbox" id="auto" checked> Load terrain around the view</label>
+   <label class="chk"><input type="checkbox" id="objects" checked> Buildings &amp; props</label>
+   <label class="chk"><input type="checkbox" id="textures" checked> Textures (ground and props)</label>
+   <label class="chk"><input type="checkbox" id="detailProps"> Full-detail props (slower)</label>
+   <label class="field" style="grid-template-columns:auto 1fr">Texture quality<select id="texQuality"><option value="128">Low · 128 px</option><option value="256" selected>Medium · 256 px</option><option value="512">High · 512 px</option></select></label>
+   <label class="chk"><input type="checkbox" id="wire"> Wireframe ground</label>
+   <div class="row"><button id="clear">Unload all</button><button id="frameBtn" title="Frame the loaded area (F)">Frame view</button></div>
+  </details>
+  <details class="group" open><summary>Map layers</summary>
+   <div id="layerList" class="layers"></div>
+   <div class="legend">Click any marker in the 3D view to see what it is. Loot and vehicle spawns come from the game's zone file; player spawns, named places and trees from the server data.</div>
+  </details>
+  </section>
+  <section id="tabCreate" class="tabpane" hidden>
+   <div class="group">
+    <label class="field">Area<input id="areaName" placeholder="My area" maxlength="60"></label>
+    <select id="areaList" aria-label="Saved areas"><option value="">Open a saved area…</option></select>
+    <div class="pair"><label class="field" style="grid-template-columns:auto 1fr">Size<select id="areaSize"><option value="128">128 m</option><option value="256">256 m</option><option value="512" selected>512 m</option><option value="1024">1 km</option></select></label>
+     <label class="field" style="grid-template-columns:auto 1fr">Start<select id="areaStart"><option value="flat">Flat grass</option><option value="copy">Copy the map here</option></select></label></div>
+    <button id="areaCreate" class="primary">Create a new area here</button>
+    <div class="legend">The area is made where the view is. Fly there on the Explore tab first (or click the map below). "Copy the map here" starts from the zone's real ground and ground types.</div>
+   </div>
+   <div id="areaTools" class="tabpane" hidden>
+    <div class="tools" role="group" aria-label="Terrain tools"><button data-tool="raise" title="Raise (1)"><svg viewBox="0 0 24 24"><path d="M12 4v12M7 9l5-5 5 5"/><path d="M3 20h18"/></svg>Raise<kbd>1</kbd></button><button data-tool="lower" title="Lower (2)"><svg viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5"/><path d="M3 20h18"/></svg>Lower<kbd>2</kbd></button><button data-tool="smooth" title="Smooth (3)"><svg viewBox="0 0 24 24"><path d="M3 15c3-6 6-6 9 0s6 6 9 0"/></svg>Smooth<kbd>3</kbd></button><button data-tool="flatten" title="Flatten (4)"><svg viewBox="0 0 24 24"><path d="M3 12h18M6 8h12M6 16h12"/></svg>Flatten<kbd>4</kbd></button><button data-tool="paint" title="Paint (5)"><svg viewBox="0 0 24 24"><path d="M4 20c3 0 5-2 5-5l8-8-3-3-8 8c-3 0-5 2-5 5"/><path d="M14 4l6 6"/></svg>Paint<kbd>5</kbd></button><button data-tool="water" title="Water (6)"><svg viewBox="0 0 24 24"><path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/></svg>Water<kbd>6</kbd></button><button data-tool="road" title="Road (7)"><svg viewBox="0 0 24 24"><path d="M8 3 4 21M16 3l4 18M12 5v3M12 11v3M12 17v3"/></svg>Road<kbd>7</kbd></button><button data-tool="bridge" title="Bridge (8)"><svg viewBox="0 0 24 24"><path d="M2 10h20M4 10v9M20 10v9M2 10c4 5 16 5 20 0M9 12v7M15 12v7"/></svg>Bridge<kbd>8</kbd></button></div>
+    <div id="toolOpts" class="group opts">
+     <div id="optBrush" class="opts">
+      <label class="slider">Size<input id="brushSize" type="range" min="2" max="80" value="12"><output id="brushSizeOut">12 m</output></label>
+      <label class="slider">Strength<input id="brushStrength" type="range" min="5" max="100" value="50"><output id="brushStrengthOut">50%</output></label>
+     </div>
+     <div id="optPaint" class="opts" hidden>
+      <div class="quick" id="quickGround"></div>
+      <div class="swatches" id="groundSwatches"></div>
+     </div>
+     <div id="optWater" class="opts" hidden>
+      <div class="seg" id="waterMode"><button data-wm="fill" class="on">Fill</button><button data-wm="dig">Dig &amp; fill</button><button data-wm="remove">Remove</button></div>
+      <label class="field">Water level<input id="waterLevel" type="number" step="0.5" value="0"></label>
+      <button id="waterFlood" title="Fill every part of the area lower than the water level">Flood everything below this level</button>
+     </div>
+     <div id="optRoad" class="opts" hidden>
+      <label class="slider">Width<input id="roadWidth" type="range" min="3" max="24" value="8"><output id="roadWidthOut">8 m</output></label>
+      <label class="field">Surface<select id="roadSurface"></select></label>
+      <label class="field">Verge<select id="roadVerge"><option value="none">None</option><option value="z_gravel">Gravel</option><option value="z_dirt">Dirt</option></select></label>
+      <label class="chk"><input type="checkbox" id="roadFlatten" checked> Level the ground under the road</label>
+      <div class="row"><button id="roadFinish" class="primary">Finish road</button><button id="roadBack">Undo point</button><button id="roadCancel">Cancel</button></div>
+     </div>
+     <div id="optBridge" class="opts" hidden>
+      <label class="field">Style<select id="bridgeStyle"><option value="concrete">Concrete (game model)</option><option value="bailey">Bailey (game model)</option><option value="simple">Simple deck</option></select></label>
+      <label class="slider">Width<input id="bridgeWidth" type="range" min="4" max="20" value="8"><output id="bridgeWidthOut">8 m</output></label>
+      <label class="field">Deck height<input id="bridgeRaise" type="number" step="0.5" value="0.5" title="Metres above the clicked banks"></label>
+     </div>
+     <div id="toolHint" class="legend">Pick a tool.</div>
+    </div>
+    <div class="row"><button id="areaUndo" title="Undo (Ctrl+Z)">Undo</button><button id="areaRedo" title="Redo (Ctrl+Y)">Redo</button></div>
+    <div class="row"><button id="areaSave" class="primary">Save area</button><button id="areaClose">Close</button><button id="areaDelete">Delete</button></div>
+    <details class="group" id="buildGroup"><summary>Build into the game</summary>
+     <label class="field">Zone name<input id="buildZone" placeholder="DevArea1" maxlength="24" pattern="[A-Za-z][A-Za-z0-9]{2,23}"></label>
+     <label class="chk"><input type="checkbox" id="buildInstall" checked> Install into the KotK client as its own pack</label>
+     <div class="row"><button id="buildGo" class="primary">Build zone</button><button id="buildRemove">Uninstall</button></div>
+     <div id="buildInfo" class="legend">Saves the area as a new zone for the KotK client: the zone file, the ground under your area rewritten, and the surrounding ground copied from Z2. Nothing the game ships is changed.</div>
+    </details>
+    <div class="row"><button id="exportHeight" title="16-bit little-endian RAW, row by row from the lowest z">Export heightmap</button><button id="exportGround">Export ground map</button></div>
+    <div id="areaInfo" class="legend"></div>
+   </div>
+   <div id="areaMapSlot"></div>
+  </section>
+  <section id="tabSeason" class="tabpane" hidden>
+   <div id="seasonState" class="legend">Christmas edits the KotK depot's own Z2 in place, as overlay packs. Nothing the game ships is changed.</div>
+   <div id="seasonMapSlot"></div>
+   <details class="group" open><summary>Snow</summary>
+    <label class="chk"><input type="checkbox" id="snPreview" checked> Show the snow in this 3D view</label>
+    <label class="chk"><input type="checkbox" id="snGround" checked> Snow texture on all grass, dirt and forest ground (roads and rock frosted)</label>
+    <label class="chk"><input type="checkbox" id="snFlora" checked> Frost the grass tufts, ferns and bushes white</label>
+    <label class="chk" title="The game's own screen-space snow pass. Switching it on made the Z2 ground disappear in game, so it stays off until that is solved."><input type="checkbox" id="snCover"> Experimental: snow shader on roofs, cars and far hills (hid the ground in game - leave off)</label>
+    <label class="field">Fireworks<select id="snFireworks"><option value="off">Off</option><option value="rare">Now and then</option><option value="normal" selected>Regular</option><option value="party">New Year's Eve</option></select></label>
+    <label class="field">Falling snow<select id="snFall"><option value="off">Off</option><option value="light">Light</option><option value="steady" selected>Steady</option><option value="heavy">Heavy</option></select></label>
+    <label class="slider">Gathers<input id="snGather" type="range" min="0" max="90" value="20"><output id="snGatherOut">20 min</output></label>
+    <div class="pair"><label class="field" style="grid-template-columns:auto 1fr">From °F<input id="snStart" type="number" min="20" max="60" step="1" value="38"></label><label class="field" style="grid-template-columns:auto 1fr">To °F<input id="snEnd" type="number" min="0" max="30" step="1" value="27"></label></div>
+    <label class="slider">Fog<input id="snFog" type="range" min="0" max="100" value="35"><output id="snFogOut">35%</output></label>
+    <label class="slider">Clouds<input id="snCloud" type="range" min="0" max="100" value="75"><output id="snCloudOut">75%</output></label>
+    <label class="slider">Wind<input id="snWind" type="range" min="0" max="60" value="15"><output id="snWindOut">1.5</output></label>
+    <label class="slider">Flakes<input id="snFlake" type="range" min="40" max="300" value="100"><output id="snFlakeOut">100%</output></label>
+    <div class="legend">The ground and grass snow is in the textures, so it is always there. The snow shader is the game's own, driven by the temperature: none above 35 °F, full at 30 °F; the server lowers it from "From" to "To" over "Gathers", so roofs, cars and fences whiten as the match goes on (0 = snowy from the start). Falling snow and fireworks are spawned around each player by the game itself.</div>
+   </details>
+   <details class="group" open><summary>Mood</summary>
+    <label class="field">Light<select id="snMood"><option value="frosty" selected>Frosty (cold sun, pale sky)</option><option value="stock">Z2 as shipped</option></select></label>
+    <label class="slider">Time<input id="snTime" type="range" min="0" max="24" step="0.25" value="17.5"><output id="snTimeOut">17:30</output></label>
+    <label class="chk"><input type="checkbox" id="snLightsOn" checked> Street and house lights on all day</label>
+   </details>
+   <details class="group" open><summary>Christmas lights</summary>
+    <div class="tools" role="group" aria-label="Decoration tools"><button data-stool="string" title="String of lights: click where it starts, then where it ends (1)"><svg viewBox="0 0 24 24"><path d="M3 7c6 6 12 6 18 0"/><circle cx="6" cy="10" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="10" r="1.3"/></svg>String<kbd>1</kbd></button><button data-stool="tree" title="Tree of lights with a star (2)"><svg viewBox="0 0 24 24"><path d="M12 3 5 19h14z"/><path d="M12 19v2"/></svg>Tree<kbd>2</kbd></button><button data-stool="lamp" title="A single warm glow, e.g. a porch lamp (3)"><svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="4"/><path d="M12 14v7"/></svg>Lamp<kbd>3</kbd></button><button data-stool="erase" title="Remove the decoration nearest the click (4)"><svg viewBox="0 0 24 24"><path d="M4 20h16M7 16 17 6l-3-3L4 13l3 3z"/></svg>Remove<kbd>4</kbd></button></div>
+    <div class="pair"><label class="field" style="grid-template-columns:auto 1fr">Colours<select id="snScheme"></select></label><label class="field" style="grid-template-columns:auto 1fr">Tree<select id="snTreeH"><option value="4">4 m</option><option value="7" selected>7 m</option><option value="12">12 m</option><option value="18">18 m</option></select></label></div>
+    <label class="chk"><input type="checkbox" id="snTwinkle" checked> Twinkle</label>
+    <label class="slider">Draw to<input id="snRange" type="range" min="60" max="400" step="10" value="180"><output id="snRangeOut">180 m</output></label>
+    <label class="slider">Bulbs<input id="snBulb" type="range" min="40" max="300" value="100"><output id="snBulbOut">100%</output></label>
+    <label class="slider">Glow<input id="snBright" type="range" min="20" max="300" value="100"><output id="snBrightOut">100%</output></label>
+    <label class="chk"><input type="checkbox" id="snReal" checked> Real light on the ground and walls (one small light each)</label>
+    <label class="chk"><input type="checkbox" id="snNight"> Only from 4 pm to 8 am</label>
+    <div id="snToolHint" class="legend">Pick a tool, then click the ground in the 3D view. Right-drag orbits.</div>
+   </details>
+   <details class="group" open><summary>Decorate automatically</summary>
+    <label class="chk"><input type="checkbox" id="adStreets" checked> Garlands between street lamps</label>
+    <label class="chk"><input type="checkbox" id="adTrees" checked> Lights on the city trees</label>
+    <label class="chk"><input type="checkbox" id="adTowns" checked> A big light tree in every town</label>
+    <label class="chk"><input type="checkbox" id="adFences"> Fence lights in the gardens (many)</label>
+    <label class="chk"><input type="checkbox" id="adCampfires" checked> Light every camp site's campfire (fire, crackle and warm light)</label>
+    <label class="chk"><input type="checkbox" id="adFireworks" checked> Fireworks over every town</label>
+    <label class="field">At most<select id="adMax"><option value="300">300 decorations</option><option value="800">800</option><option value="1500" selected>1,500</option><option value="3000">3,000</option></select></label>
+    <div class="row"><button id="adView" title="Only within 1 km of the view">Around the view</button><button id="adAll" class="primary">Whole map</button></div>
+    <div class="row"><button id="adClearAuto">Clear automatic</button><button id="adClearAll">Clear all</button></div>
+   </details>
+   <div id="seasonInfo" class="legend"></div>
+   <div class="row"><button id="snSave">Save</button><button id="snBuild" class="primary">Build &amp; install</button><button id="snRemove">Uninstall</button></div>
+   <label class="chk"><input type="checkbox" id="snInstall" checked> Install into the KotK client and the launcher's server</label>
+  </section>
+  <div id="status" class="status" role="status" aria-live="polite">Loading zones…</div>
+  <details id="builder" class="group"><summary>Room builder</summary>
+   <label class="field">Room<input id="roomName" placeholder="My room" maxlength="60"></label>
+   <select id="roomList" aria-label="Saved rooms"><option value="">Open a saved room…</option></select>
+   <input id="actorSearch" type="search" placeholder="Search models to place…" aria-label="Search models">
+   <select id="actorList" size="7" aria-label="Model to place"></select>
+   <div class="seg" role="group" aria-label="Build tool"><button data-mode="place" title="Place (1)">Place</button><button data-mode="select" title="Select / move (2)">Select</button><button data-mode="spawn" title="Spawn points (3)">Spawns</button></div>
+   <label id="spawnKindRow" class="field" hidden>Spawn type<select id="spawnKind">
+    <option value="player">Player spawn</option><option value="weapons">Weapon spawn</option><option value="gear">Gear spawn</option><option value="backpack">Backpack spawn</option>
+    <option value="medical">Medical spawn</option><option value="crate">Military crate</option><option value="fuel">Fuel can</option>
+    <option value="vehicle:ATV01">Vehicle · ATV</option><option value="vehicle:Offroader">Vehicle · Offroader</option><option value="vehicle:PickupTruck">Vehicle · Pickup truck</option><option value="vehicle:PoliceCar01">Vehicle · Police car</option></select></label>
+   <div class="row"><button id="importSpawns" title="Copy the game's spawn points that are switched on in Map layers and loaded around the view">Copy game spawns in view</button><button id="clearSpawns">Clear spawns</button></div>
+   <div class="pair"><label class="field" style="grid-template-columns:auto 1fr">Rotate<select id="rotStep"><option value="5">5°</option><option value="15" selected>15°</option><option value="45">45°</option><option value="90">90°</option></select></label>
+    <label class="field" style="grid-template-columns:auto 1fr">Snap<select id="snap"><option value="0">off</option><option value="0.5">0.5 m</option><option value="1" selected>1 m</option><option value="4">4 m</option></select></label></div>
+   <label class="chk"><input type="checkbox" id="alignGround"> Tilt objects to the slope</label>
+   <div id="builderHint" class="legend">Pick a model and choose Place, then click the ground.</div>
+   <div id="roomInfo" class="legend"></div>
+   <div class="row"><button id="undo" title="Undo (Ctrl+Z)">Undo</button><button id="redo" title="Redo (Ctrl+Y)">Redo</button><button id="dup" title="Duplicate (Ctrl+D)">Duplicate</button></div>
+   <div class="row"><button id="roomSave" class="primary">Save room</button><button id="roomNew">New</button><button id="roomDelete">Delete</button></div>
+   <p class="note" style="margin:0">Saved rooms are JSON files the server emulator can spawn players into.</p>
+  </details>
+  <p class="note" id="exploreNote">Beta: ground heights and ground types come from the client's chunk files and every building and prop is its real 3D model with its colour texture. Water and trees are not reproduced yet. Chunks, models and textures are decoded once, then load from the cache.</p>
+ </aside>
+ <main class="view">
+  <canvas id="gl" tabindex="0" aria-label="3D terrain. Drag to orbit, W A S D to fly, wheel to zoom."></canvas>
+  <div id="empty" class="empty"><b>Pick a place on the map</b><span>Click anywhere in the overview to fly there.</span></div>
+  <div id="load" class="load" hidden></div>
+  <div id="pick" class="pick" hidden></div>
+  <div id="info" class="info"></div>
+  <div class="hint" id="hint"><kbd>Drag</kbd> orbit <kbd>Right</kbd> pan <kbd>Wheel</kbd> zoom <kbd>W A S D</kbd> fly <kbd>Shift</kbd> faster <kbd>F</kbd> frame</div>
+ </main>
+</div>
+<script src="/terrain/app.js"></script>
+<script src="/terrain/area.js"></script>
+<script src="/terrain/season.js"></script>
+</body></html>
